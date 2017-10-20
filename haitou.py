@@ -415,7 +415,7 @@ def main():
     xiaozhao = Xiaozhao()
     output='gis20171016.txt'
     text = xiaozhao.claw_content()
-    open('b.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
+    open(u'H:/个人简历/今日宣讲会.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
     text1 = xiaozhao.dida_ZhaopinGonggao()
     open(output, 'w').write(str(text1[1]) + '\n' + str(text1[0]) + '\n')
     text2 = xiaozhao.dida_ZhaopinXinxi_search()
