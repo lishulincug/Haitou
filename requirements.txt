@@ -4,3 +4,6 @@ request==0.0.13
 requests==2.14.2
 requests-file==1.4.2
 requests-ftp==0.3.1
+chardet==3.0.0
+prettytable==0.7.2
+smtplib==20.12
