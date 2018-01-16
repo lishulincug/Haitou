@@ -516,7 +516,7 @@ def main():
     else:
         text = xiaozhao.claw_content('今天')
     open(str(date)+'.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
-    open(u'H:/个人简历/今日宣讲会.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
+    #open(u'H:/个人简历/今日宣讲会.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
     
     # ----------招聘信息-------------
 
