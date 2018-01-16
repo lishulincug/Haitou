@@ -8,6 +8,7 @@ import smtplib
 import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
 from email.utils import formataddr
 from email.mime.application import MIMEApplication
 # import base64
@@ -26,36 +27,57 @@ sender = username
 receiver = ['1627041882@qq.com','994992333@qq.com']# 'xxxxxxxxxx@qq.com','xxxxxxxxxx@126.com'
 smtpserver = 'smtp.126.com'
 keysword = ['GIS', '地理', '地图', '遥感','测绘', '数据', '机器学习','图像识别']
-#keysword = ['物探', '地球物理', '勘查技术与工程','地球探测与信息技术']
+# keysword = ['物探', '地球物理', '勘查技术与工程','地球探测与信息技术']
 
 #打开网页链接
-def openlink(self,link):
+def openlink(req):
         maxNum = 10
         for tries in range(maxNum):
             try:
-                req = urllib2.request.Request(link, headers = self.headers)
-                response = urllib2.request.urlopen(link)
-                return response
+                # req = urllib2.request.Request(link, headers = self.headers)
+                response = urllib2.urlopen(req).read().decode('GBK')
+                break
             except:
                 if tries < (maxNum - 1):
                     continue
                 else:
-                    print("Has tried %d times to access url %s, all failed!", maxNum, link)
+                    print("Has tried %d times to access url %s, all failed!", maxNum, req)
                     break
+        return response
 # 一般网页关键词搜索匹配，返回存在的关键词
-def cugjiuye_search( url, keys,decode):
+def cugjiuye_search( url, keys, decode):
     # url = ["http://cug.91wllm.com"]
-
     result = []
+
     # pt1 = PrettyTable(tableHeader1)
     # for key in keys:
-    if url[0]=='':
+    if url[0] == '':
+        keysword = ['GIS', '地理', '遥感', '测绘', '数据', '机器学习', '图像识别']
+        # keysword = ['物探', '地球物理', '勘查技术与工程', '地球探测与信息技术']
         req = urllib2.Request(str(keys), headers=headers)
     else:
+        keysword = ['GIS', '地理', '地图', '遥感', '测绘', '数据', '机器学习', '图像识别']
+        # keysword = ['物探', '地球物理', '勘查技术与工程', '地球探测与信息技术']
         req = urllib2.Request(url[0] + str(keys), headers=headers)
-    if decode!='utf-8':
-        content = urllib2.urlopen(req).read()  #urllib2.URLError: <urlopen error [Errno 10060] > 报连接失败。原因是多个线程爬去某个网站的数据，每次连接完需要sleep(1)一会
-        char_type = chardet.detect(content)
+    if decode :  #!= 'utf-8'
+        # content = urllib2.urlopen(req).read()  # urllib2.URLError: <urlopen error [Errno 10060] > 报连接失败。原因是多个线程爬去某个网站的数据，每次连接完需要sleep(1)一会
+        maxNum = 10
+        for tries in range(maxNum):
+            try:
+                # req = urllib2.request.Request(link, headers = self.headers)
+                content = urllib2.urlopen(req).read()
+                char_type = chardet.detect(content)
+                content = urllib2.urlopen(req).read().decode(char_type["encoding"])
+                break
+            except:
+                if tries < (maxNum - 1):
+                    continue
+                else:
+                    print("Has tried %d times to access url %s, all failed!", maxNum, req)
+                    content=''
+                    break
+        # return content
+        # char_type = chardet.detect(content)
         # pattern = re.compile(
         #     'content="text/html; charset=(.*?)" />',re.S)
         # itemdecode = re.findall(pattern, content)
@@ -63,9 +85,9 @@ def cugjiuye_search( url, keys,decode):
         #     # content = urllib2.urlopen(req).read().decode(str(itemdecode[0]))
         #     content = urllib2.urlopen(req).read().decode(chardet["encoding"].lower())
         # else:
-        content = urllib2.urlopen(req).read().decode(char_type["encoding"])
-    else:
-        content = urllib2.urlopen(req).read().decode('utf-8')
+        # content = urllib2.urlopen(req).read().decode(char_type["encoding"])
+    # else:
+    #     content = urllib2.urlopen(req).read().decode('utf-8')
     # pattern = re.compile(
     #     '<ul class="infoList">.*?<li class=.*?<a href="(.*?)" target="_blank">(.*?)</a></li>.*?">(.*?)</li>.*?">(.*?)</li>',re.S)
     # items1 = re.findall(pattern, content)
@@ -77,7 +99,7 @@ def cugjiuye_search( url, keys,decode):
 class Xiaozhao(object):
     # 海投网检索
     # |  2017-09-23 14:30  |   地大   |       上海数慧系统技术有限公司       |                    西区教三楼201                     |
-    def claw_content(self):
+    def claw_content(self,date):
         urls = ["https://xjh.haitou.cc/wh/uni-6/page-", 'https://xjh.haitou.cc/wh/uni-2/page-',
                 'https://xjh.haitou.cc/wh/uni-1/page-', 'https://xjh.haitou.cc/wh/uni-3/page-']  # 海投网湖北
         haitou_url=['https://xjh.haitou.cc']
@@ -101,12 +123,59 @@ class Xiaozhao(object):
                     else:
                         pt.align["公司"] = "l"  # 以name字段左对齐
                         pt.padding_width = 2  # 填充宽度
-                        if (item[4]==u'今天')or(item[4]==u'明天' and (int(H)<=24)and (int(H)>=21)):
+                        if (date==u'今天')and(item[4]==u'今天'):
                             time.sleep(0.4)
                             reword = cugjiuye_search(haitou_url, item[0],'utf-8')
                             if reword.__len__() >= 1:
                                 pt.add_row([item[3],reword[0], item[2],item[1], item[5],haitou_url[0]+item[0]])#, item[4]
+                        elif (date==u'明天')and(item[4]==u'明天' and (int(H)<=24)and (int(H)>=19)):
+                            time.sleep(0.4)
+                            reword = cugjiuye_search(haitou_url, item[0], 'utf-8')
+                            if reword.__len__() >= 1:
+                                pt.add_row([item[3], reword[0], item[2], item[1], item[5],
+                                            haitou_url[0] + item[0]])  # , item[4]
         return pt,urls1
+
+    # 海投网校园招聘检索
+    # |  2017-09-23 14:30  |   地大   |       上海数慧系统技术有限公司       |                    西区教三楼201                     |
+    def haitou_xiaozhao(self, date):
+            urls = ["https://xyzp.haitou.cc/search-"]  # 海投网校招
+            haitou_url = ['https://xjh.haitou.cc']
+            tableHeader = ["公司", '招聘职位', '涉及城市', "发布时间"]
+            pt = PrettyTable(tableHeader)
+            # pt3 = PrettyTable(tableHeader)
+            urls1 = []
+            now = time.strftime("%y-%m-%d %H:%M:%S", time.localtime())
+            H = now[9:11]
+            for url in urls:
+                urls1.append(url + str(1))
+                for page in range(1, 3):  #
+                    req = urllib2.Request(url + str(page), headers=headers)
+                    content = urllib2.urlopen(req).read().decode('utf-8')
+                    # print content
+                    pattern = re.compile(
+                        '<tr data-key=.*?cxxt-title"><a href="(.*?)" title=.*?success company">(.*?)</div><span>(.*?)</span></a>.*?"hold-ymd">(.*?)</span>.*?<span class=.*?">\((.*?)\)</span></td><td class="text-ellipsis"><span title="(.*?)">.*?</a></td></tr>',
+                        re.S)
+                    items = re.findall(pattern, content)
+                    for item in items:
+                        if "</span>" in item[2]:
+                            del item
+                        else:
+                            pt.align["公司"] = "l"  # 以name字段左对齐
+                            pt.padding_width = 2  # 填充宽度
+                            if (date == u'今天') and (item[4] == u'今天'):
+                                time.sleep(0.4)
+                                reword = cugjiuye_search(haitou_url, item[0], 'utf-8')
+                                if reword.__len__() >= 1:
+                                    pt.add_row([item[3], reword[0], item[2], item[1], item[5],
+                                                haitou_url[0] + item[0]])  # , item[4]
+                            elif (date == u'明天') and (item[4] == u'明天' and (int(H) <= 24) and (int(H) >= 19)):
+                                time.sleep(0.4)
+                                reword = cugjiuye_search(haitou_url, item[0], 'utf-8')
+                                if reword.__len__() >= 1:
+                                    pt.add_row([item[3], reword[0], item[2], item[1], item[5],
+                                                haitou_url[0] + item[0]])  # , item[4]
+            return pt, urls1
     #地大就业网招聘公告检索
     def dida_ZhaopinGonggao(self):
         urls = ["http://cug.91wllm.com/campus/index?keyword=&range=&city=&time=&page="]
@@ -199,7 +268,8 @@ class Xiaozhao(object):
         return pt1, urls
 
     #武大就业网招聘信息检索
-    def wuda_jiuye(self):
+    def wuda_jiuye(self,output):
+        self.school = 'wuda'
         urls = ["http://www.xsjy.whu.edu.cn/zftal-web/zfjy!wzxx/xjhxx_cxXjhForWeb.html#",'http://www.xsjy.whu.edu.cn/zftal-web/zfjy!wzxx/zfjy!wzxx!whdx10486/xjhxx_ckXjhxx.html?sqbh=53f14d59c2e07b9af5d572797e50a67b'] #宣讲会
         urls1 = ['http://www.xsjy.whu.edu.cn/default.html'] #招聘信息
         urls2=["http://xsjy.whu.edu.cn/zftal-web/zfjy!wzxx!whdx10486/dwzpxx_cxWzDwzpxxNryEX.html#iframe"]
@@ -210,10 +280,22 @@ class Xiaozhao(object):
         cugurl=['']
         tableHeader1 = ['专业',"招聘公告",'链接']
         pt1 = PrettyTable(tableHeader1)
+        open(output, 'a+').write('------------------------武汉大学招聘信息------------------------------'+'\n')
+
+        # # The proxy address and port:
+        # proxy_info = {'host': 'web-proxy.oa.com', 'port': 8080}
+        # # We create a handler for the proxy
+        # proxy_support = urllib2.ProxyHandler({"http": "http://%(host)s:%(port)d" % proxy_info})
+        # # We create an opener which uses this handler:
+        # opener = urllib2.build_opener(proxy_support)
+        # # Then we install this opener as the default opener for urllib2:
+        # urllib2.install_opener(opener)
+
         for url in urls1:
           for page in range(1,3):#
             req = urllib2.Request(url, headers=headers)
-            content = urllib2.urlopen(req).read().decode('GBK')
+            # content = urllib2.urlopen(req).read().decode('GBK')
+            content=openlink(req)
             # print content
             pattern = re.compile('<li class="xwzd"><a href="(.*?)" target="_blank" title=(.*?)>.*?</a><span class=',re.S)
             pattern1 = re.compile('<li><a href="(.*?)" target="_blank" title=(.*?)>.*?</a><span class=',
@@ -231,7 +313,10 @@ class Xiaozhao(object):
                     del item1
                 else:
                     ts +=0.2
-                    time.sleep(ts)
+                    if ts>= 3:
+                        time.sleep(3)
+                    else:
+                        time.sleep(ts)
                     print item1[0]
                     reword=cugjiuye_search(cugurl,item1[0],'GBK')
                     if reword.__len__()>=1:
@@ -239,13 +324,16 @@ class Xiaozhao(object):
                         pt1.padding_width = 2  # 填充宽度
                         if len(item1[1])>=26:
                             pt1.add_row([reword[0],item1[1][0:26],item1[0]])  # , item1[4]
+                            open(output, 'a+').write(reword[0]+' , '+item1[1][0:26]+' , '+item1[0] + '\n')
                         else:
                             pt1.add_row([reword[0],item1[1], item1[0]])#, item1[4]
+                            pt=[reword[0],item1[1], item1[0]]
+                            open(output, 'a+').write(reword[0]+' , '+item1[1]+' , '+item1[0] + '\n')
                         # print [item1[1], item1[2],item1[3], item1[0]]
         return pt1,urls
 
         # 华科就业网招聘信息检索
-    def huake_jiuye(self):
+    def huake_jiuye(self,output):
         urls = ["http://www.xsjy.whu.edu.cn/zftal-web/zfjy!wzxx/xjhxx_cxXjhForWeb.html#",
                 'http://www.xsjy.whu.edu.cn/zftal-web/zfjy!wzxx/zfjy!wzxx!whdx10486/xjhxx_ckXjhxx.html?sqbh=53f14d59c2e07b9af5d572797e50a67b']  # 宣讲会
         urls1 = ["http://job.hust.edu.cn/searchJob_"]  # 招聘信息
@@ -256,6 +344,7 @@ class Xiaozhao(object):
         cugurl = ['http://job.hust.edu.cn']
         tableHeader1 = ['专业', "招聘公告",  '发布时间', '链接']
         pt1 = PrettyTable(tableHeader1)
+        open(output, 'a+').write('------------------------华中科技大学招聘信息------------------------------' + '\n')
         for url in urls1:
             for page in range(1, 8):  #
                 req = urllib2.Request(url+str(page)+'.jspx?fbsj=&q=&type=2', headers=headers)
@@ -274,17 +363,19 @@ class Xiaozhao(object):
                             pt1.align["工作城市"] = "l"  # 以name字段左对齐
                             pt1.padding_width = 2  # 填充宽度
                             if len(item1[1]) >= 26:
-                                pt1.add_row(
-                                    [reword[0], item1[1][0:26], item1[2],  cugurl[0] + item1[0]])  # , item1[4]
+                                pt1.add_row([reword[0], item1[1][0:26], item1[2],  cugurl[0] + item1[0]])  # , item1[4]
+                                open(output, 'a+').write(
+                                    reword[0] + ' , ' +  item1[1][0:26] + ' , ' + item1[2] + ' , ' + cugurl[0] + item1[0] + '\n')
                             else:
                                 pt1.add_row(
                                     [reword[0], item1[1], item1[2],  cugurl[0] + item1[0]])  # , item1[4]
+                                open(output, 'a+').write(reword[0] + ' , ' + item1[1] +' , '+item1[2]+ ' , ' + cugurl[0] + item1[0] + '\n')
                                 # print [item1[1], item1[2],item1[3], item1[0]]
         return pt1, urls
 
-    def send_email(self):
-        text = self.claw_content()
-        open('b.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
+    def send_email(self,text):
+        #text = self.claw_content()
+        #open('b.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
         username = 'lsl_cug@126.com'  # input("请输入账号:")
         password = '123456lsl'  # input("请输入密码:")
         sender = username
@@ -406,31 +497,45 @@ def deb_print():
 def check_time(H, M,S):
     #    list=deb_print()
 
-    if (H == "17" and M == "52"and S == "00"
-                                        "") or(H == "07" and M == "45"and S == "00")or(H == "13" and M == "06"and S == "18"):#
+    if (H == "17" and M == "52"and S == "00" ) or(H == "07" and M == "45"and S == "00")or(H == "13" and M == "06"and S == "18"):#
         xiaozhao = Xiaozhao()
-        xiaozhao.send_email()
+        # xiaozhao.send_email()
         s.enter(1, 1,check_time, deb_print())
 def main():
+    now = time.strftime("%y-%m-%d %H:%M:%S", time.localtime())
+    date = datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d")
+    H = now[9:11]
     xiaozhao = Xiaozhao()
-    output='gis20171016.txt'
-    text = xiaozhao.claw_content()
+    # ---------今日宣讲会----------
+
+    if (int(H)<=24)and (int(H)>=19):
+        text = xiaozhao.claw_content('明天')
+    else:
+        text = xiaozhao.claw_content('今天')
+    open(str(date)+'.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
     open(u'H:/个人简历/今日宣讲会.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
+    
+    # ----------招聘信息-------------
+
+    output = 'GIS' + str(date) + '.txt'
+    output1 = u'招聘信息' + '.txt'
     text1 = xiaozhao.dida_ZhaopinGonggao()
     open(output, 'w').write(str(text1[1]) + '\n' + str(text1[0]) + '\n')
+	# open(output1, 'w').write(str(text1[1]) + '\n' + str(text1[0]) + '\n')
     text2 = xiaozhao.dida_ZhaopinXinxi_search()
     open(output, 'a+').write(str(text2[1]) + '\n' + str(text2[0]) + '\n')
-    text5 = xiaozhao.huake_jiuye()
-    open(output, 'a+').write(str(text5[1]) + '\n' + str(text5[0]) + '\n')
+	# open(output1, 'a+').write(str(text2[1]) + '\n' + str(text2[0]) + '\n')
+    text5 = xiaozhao.huake_jiuye(output)
+	# text5 = xiaozhao.huake_jiuye(output1)
+    # open(output, 'a+').write(str(text5[1]) + '\n' + str(text5[0]) + '\n')
     text3 = xiaozhao.dida_yanjiusheng_jiuye()
     open(output, 'a+').write(str(text3[1]) + '\n' + str(text3[0]) + '\n')
-    text4=xiaozhao.wuda_jiuye()
-    open(output, 'a+').write(str(text4[1]) + '\n' + str(text4[0]) + '\n')
+	# open(output1, 'a+').write(str(text3[1]) + '\n' + str(text3[0]) + '\n')
+    text4=xiaozhao.wuda_jiuye(output)
+	# text4=xiaozhao.wuda_jiuye(output1)
 
 
-
-    # xiaozhao.send_email()
-
+    # open(output, 'a+').write(str(text4[1]) + '\n' + str(text4[0]) + '\n')
     # f = open("demo_1.html", 'w')
     # message = """
     # <html>
@@ -443,6 +548,7 @@ def main():
     #
     # f.write(message)
     # f.close()
+    xiaozhao.send_email(text)
     while True:
         #    print time.localtime()
         #    print time.strftime("%y-%m-%d %H:%M:%S",time.localtime())
