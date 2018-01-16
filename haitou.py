@@ -376,8 +376,10 @@ class Xiaozhao(object):
     def send_email(self,text):
         #text = self.claw_content()
         #open('b.txt', 'w').write(str(text[1]) + '\n' + str(text[0]) + '\n')
-        username = 'lsl_cug@126.com'  # input("请输入账号:")
-        password = '123456lsl'  # input("请输入密码:")
+	username = '15623863340@sina.cn'  # input("请输入账号:")
+        password = '133499'  # input("请输入密码:")
+        #username = 'lsl_cug@126.com'  # input("请输入账号:")
+        #password = '123456lsl'  # input("请输入密码:")
         sender = username
         # sender=''
         receiver = ['1627041882@qq.com']  # 'xxxxxxxxxx@qq.com','xxxxxxxxxx@126.com','994992333@qq.com','1847725033@qq.com','1847725033@qq.com','849281511@qq.com'
@@ -419,9 +421,10 @@ class Xiaozhao(object):
         msg.attach(MIMEText(realText, 'plain', 'utf-8'))
 
         # 构造附件1，传送当前目录下的 test.txt 文件
-        att1 = MIMEApplication(open('b.txt', 'rb').read())
+	output = 'GIS' + '.txt'
+        att1 = MIMEApplication(open(output, 'rb').read())
         # 这里的filename可以任意写，写什么名字，邮件中显示什么名字
-        att1.add_header('Content-Disposition', 'attachment', filename='hjx.txt')
+        att1.add_header('Content-Disposition', 'attachment', filename='招聘信息.txt')
         msg.attach(att1)
         # # 构造附件1，传送当前目录下的 test.txt 文件
         # att2 = MIMEApplication(open('b1.txt', 'rb').read())
@@ -517,7 +520,7 @@ def main():
     
     # ----------招聘信息-------------
 
-    output = 'GIS' + str(date) + '.txt'
+    output = 'GIS' + '.txt' #+ str(date) 
     output1 = u'招聘信息' + '.txt'
     text1 = xiaozhao.dida_ZhaopinGonggao()
     open(output, 'w').write(str(text1[1]) + '\n' + str(text1[0]) + '\n')
